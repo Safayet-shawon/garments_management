@@ -1,0 +1,14 @@
+<?php
+
+namespace App\Models;
+
+use App\Models\Concerns\StringKey;
+use Illuminate\Database\Eloquent\Model;
+
+class PurchaseRequisition extends Model
+{
+    use StringKey;
+
+    protected $guarded = [];
+    protected $casts = ['qty' => 'float'];
+}
