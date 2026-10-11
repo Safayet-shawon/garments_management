@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-server
+dist-artifact
+.env
+.env.local
+*.log
+.DS_Store
+coverage
+lighthouse-report*
+winner-apparels.html
