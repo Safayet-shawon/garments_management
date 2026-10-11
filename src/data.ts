@@ -68,7 +68,10 @@ export const salaryParts = (basic: number) => {
 }
 
 // ---- deterministic random ----
-let seed = 20261008
+const SEED0 = 20261008
+let seed = SEED0
+/** Restarts the pseudo-random sequence so every seed build yields identical data. */
+export const resetSeed = () => { seed = SEED0 }
 const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296 }
 const pick = <T,>(a: T[]) => a[Math.floor(rnd() * a.length)]
 
@@ -180,6 +183,12 @@ export const seedSuppliers = (): Supplier[] => [
   { id: 's5', name: 'National Thread Supply', type: 'Thread Supplier', contact: 'Rafiq Mia', phone: '+880 15XX-XXXXXX', location: 'Chattogram', rating: 4.7, status: 'Active' },
   { id: 's6', name: 'Rupsha Denim Mills', type: 'Fabric Manufacturer', contact: 'Sohel Rana', phone: '+880 17XX-XXXXXX', location: 'Narayanganj', rating: 4.3, status: 'Active' },
   { id: 's7', name: 'Padma Trims & Labels', type: 'Accessories Supplier', contact: 'Rokeya Begum', phone: '+880 13XX-XXXXXX', location: 'Dhaka', rating: 4.1, status: 'Inactive' },
+  { id: 's8', name: 'Chattogram Thread Works', type: 'Thread Supplier', contact: 'Nasir Uddin', phone: '+880 18XX-XXXXXX', location: 'Chattogram', rating: 4.4, status: 'Active' },
+  { id: 's9', name: 'Eastern Yarn & Thread Co.', type: 'Thread Supplier', contact: 'Rubel Khan', phone: '+880 17XX-XXXXXX', location: 'Gazipur', rating: 4.2, status: 'Active' },
+  { id: 's10', name: 'Zenith Trims Ltd.', type: 'Accessories Supplier', contact: 'Salma Akter', phone: '+880 19XX-XXXXXX', location: 'Dhaka', rating: 4.5, status: 'Active' },
+  { id: 's11', name: 'Hilltop Labels & Tags', type: 'Accessories Supplier', contact: 'Imran Hossain', phone: '+880 16XX-XXXXXX', location: 'Narayanganj', rating: 4.3, status: 'Active' },
+  { id: 's12', name: 'Pack Bangla Ltd.', type: 'Packaging Supplier', contact: 'Jesmin Begum', phone: '+880 15XX-XXXXXX', location: 'Gazipur', rating: 4.5, status: 'Active' },
+  { id: 's13', name: 'GreenPack Industries', type: 'Packaging Supplier', contact: 'Habib Rahman', phone: '+880 13XX-XXXXXX', location: 'Dhaka', rating: 4.1, status: 'Active' },
 ]
 export const seedRequirements = (): Requirement[] => [
   { id: 'PR-2026-011', materialId: 'm12', qty: 1500, reason: 'Reorder – Premium Hoodie line', supplierId: 's3', expected: '2026-10-18', priority: 'High', notes: '', status: 'Pending Purchase', created: '2026-10-06' },

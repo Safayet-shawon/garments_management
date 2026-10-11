@@ -13,6 +13,7 @@ export interface DataState {
 
 /** Deterministic seed data set used by the offline demo and by `db:seed`. Call once per process. */
 export function buildSeed(): DataState {
+  D.resetSeed()
   const products = D.seedProducts()
   const employees = D.seedEmployees()
   const buyers = D.seedBuyers(employees.filter((e) => e.dept === 'Merchandising').map((e) => e.id))

@@ -12,6 +12,8 @@ export const idOf = (name: string, doc: any): string => String(name === 'countri
 
 export interface SyncPayload {
   changes: Record<string, { upsert: any[]; remove: string[] }>
+  /** full id order, sent only for collections whose order changed */
+  order?: Record<string, string[]>
   kv: Record<string, unknown>
 }
 export interface Bootstrap {

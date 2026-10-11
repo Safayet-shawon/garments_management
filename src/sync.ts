@@ -29,16 +29,18 @@ export function fromWire(b: Bootstrap, fallback: DataState): DataState {
 export class Syncer {
   private seen = new Map<string, Map<string, string>>()
   private kvSeen = new Map<string, string>()
+  private orderSeen = new Map<string, string>()
 
   reset(w: Wire) {
-    this.seen.clear(); this.kvSeen.clear()
-    for (const [name, docs] of Object.entries(w.collections)) this.seen.set(name, new Map(docs.map((d) => [idOf(name, d), JSON.stringify(d)])))
+    this.seen.clear(); this.kvSeen.clear(); this.orderSeen.clear()
+    for (const [name, docs] of Object.entries(w.collections)) { this.seen.set(name, new Map(docs.map((d) => [idOf(name, d), JSON.stringify(d)]))); this.orderSeen.set(name, docs.map((d) => idOf(name, d)).join('|')) }
     for (const [k, v] of Object.entries(w.kv)) this.kvSeen.set(k, JSON.stringify(v))
   }
 
   /** Returns the changes since the last commit, or null when nothing differs. */
   diff(w: Wire): { payload: SyncPayload; commit: () => void } | null {
-    const payload: SyncPayload = { changes: {}, kv: {} }
+    const payload: SyncPayload = { changes: {}, kv: {}, order: {} }
+    const orderNext = new Map<string, string>()
     const next = new Map<string, Map<string, string>>()
     let count = 0
     for (const [name, docs] of Object.entries(w.collections)) {
@@ -53,6 +55,9 @@ export class Syncer {
       }
       const remove = [...before.keys()].filter((id) => !after.has(id))
       next.set(name, after)
+      const orderKey = docs.map((d) => idOf(name, d)).join('|')
+      orderNext.set(name, orderKey)
+      if (this.orderSeen.get(name) !== orderKey) { payload.order![name] = docs.map((d) => idOf(name, d)); count++ }
       if (upsert.length || remove.length) { payload.changes[name] = { upsert, remove }; count += upsert.length + remove.length }
     }
     const kvNext = new Map<string, string>()
@@ -62,6 +67,6 @@ export class Syncer {
       if (this.kvSeen.get(k) !== json) { payload.kv[k] = v; count++ }
     }
     if (!count) return null
-    return { payload, commit: () => { for (const [n, m] of next) this.seen.set(n, m); this.kvSeen = kvNext } }
+    return { payload, commit: () => { for (const [n, m] of next) this.seen.set(n, m); this.kvSeen = kvNext; this.orderSeen = orderNext } }
   }
 }
