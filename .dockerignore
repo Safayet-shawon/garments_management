@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-server
+dist-artifact
+.vercel
+.git
+.env
+.env.*
+lighthouse-report
+photos-src
+docs
+*.log

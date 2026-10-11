@@ -8,7 +8,7 @@ import * as cheerio from 'cheerio'
 const args = process.argv.slice(2)
 const mdIdx = args.indexOf('--md')
 const mdPath = mdIdx >= 0 ? args[mdIdx + 1] : null
-const base = (args.find((a, i) => !a.startsWith('--') && i !== mdIdx + 1) || 'http://localhost:8080').replace(/\/$/, '')
+const base = (args.find((a, i) => !a.startsWith('--') && !(mdIdx >= 0 && i === mdIdx + 1)) || 'http://localhost:8080').replace(/\/$/, '')
 
 const results = []
 const add = (page, check, level, msg) => results.push({ page, check, level, msg })

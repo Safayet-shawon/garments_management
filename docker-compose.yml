@@ -1,0 +1,28 @@
+# docker compose up --build        -> http://localhost  (nginx load balancer -> app1, app2)
+x-app: &app
+  build: .
+  env_file: .env
+  environment:
+    NODE_ENV: production
+    PORT: "8080"
+    TRUST_PROXY: "1"
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/health"]
+    interval: 30s
+    timeout: 4s
+    retries: 3
+
+services:
+  app1: *app
+  app2: *app
+  lb:
+    image: nginx:1.27-alpine
+    ports: ["80:80"]
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/nginx.conf:ro
+      - edge-cache:/var/cache/nginx
+    depends_on: [app1, app2]
+    restart: unless-stopped
+volumes:
+  edge-cache:

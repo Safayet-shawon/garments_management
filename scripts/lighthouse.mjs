@@ -7,8 +7,8 @@ import { mkdirSync, readFileSync } from 'node:fs'
 const args = process.argv.slice(2)
 const di = args.indexOf('--device')
 const device = di >= 0 ? args[di + 1] : 'desktop'
-const base = (args.find((a, i) => !a.startsWith('--') && i !== di + 1) || 'http://localhost:8080').replace(/\/$/, '')
-const pages = ['/', '/collections', '/collections/premium-cotton-t-shirt', '/contact']
+const base = (args.find((a, i) => !a.startsWith('--') && !(di >= 0 && i === di + 1)) || 'http://localhost:8080').replace(/\/$/, '')
+const pages = ['/', '/collections', '/collections/classic-polo-shirt', '/contact']
 const MIN = { performance: 0.9, accessibility: 0.9, 'best-practices': 0.9, seo: 0.95 }
 
 mkdirSync('lighthouse-report', { recursive: true })

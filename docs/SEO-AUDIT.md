@@ -1,6 +1,6 @@
 # Technical SEO audit
 
-Site: http://localhost:8080
+Site: https://winner-apparels.vercel.app
 
 **86 passed, 0 warnings, 0 errors**
 

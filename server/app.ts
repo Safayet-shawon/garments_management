@@ -259,7 +259,8 @@ export async function createApp({ db, distDir = resolve(process.cwd(), config.di
   app.get('/sitemap.xml', async (_req, res) => res.type('application/xml').set('Cache-Control', 'public, max-age=3600').send(sitemapXml(await getCatalog())))
 
   // ---------- static frontend ----------
-  const indexFile = join(distDir, 'index.html')
+  // Vercel serves dist/ statically, so the HTML shell is stored under another name to force '/' through this server
+  const indexFile = existsSync(join(distDir, 'app-shell.html')) ? join(distDir, 'app-shell.html') : join(distDir, 'index.html')
   const hasDist = existsSync(indexFile)
   if (hasDist) {
     const template = readFileSync(indexFile, 'utf8')
