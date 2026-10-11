@@ -1,6 +1,7 @@
 import { Check, RotateCcw } from 'lucide-react'
 import { useStore } from '../store'
-import { Card, DataTable, FormField, PageHeader, StatusBadge, useConfirm } from '../ui'
+import { Card, DataTable, FormField, PageHeader, StatusBadge, useConfirm, cx } from '../ui'
+import { BTN_STYLES, useButtonStyle } from '../appearance'
 import { SYSTEM_ROLES } from '../data'
 
 export function UsersPage() {
@@ -28,9 +29,21 @@ export function RolesPage() {
 export function SystemSettings() {
   const { s, a } = useStore()
   const { ask, el } = useConfirm()
+  const [btn, setBtn] = useButtonStyle()
   return (
     <>
-      <PageHeader title="System Settings" subtitle="Company profile and demo controls" />
+      <PageHeader title="System Settings" subtitle="Company profile, appearance and demo controls" />
+      <Card title="Appearance: button style" className="mb-4">
+        <p className="mb-4 text-sm text-slate-500">Pick how buttons look across the whole system. Your choice is remembered on this device.</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {BTN_STYLES.map((b) => (
+            <button key={b.id} onClick={() => setBtn(b.id)} aria-pressed={btn === b.id} className={cx('rounded-xl border p-4 text-left transition', btn === b.id ? 'border-gold-500 ring-2 ring-gold-500/40' : 'border-slate-200 hover:border-slate-300')}>
+              <div className="rounded-lg bg-gradient-to-br from-brand-600 via-brand-500 to-gold-500 p-4"><div data-btn={b.id} className="flex gap-2"><span className="btn-primary pointer-events-none" style={{ pointerEvents: 'none' }}>Save</span><span className="btn-secondary pointer-events-none">Cancel</span></div></div>
+              <div className="mt-3 text-sm font-semibold text-slate-900">{b.label}</div><div className="text-xs text-slate-500">{b.hint}</div>
+            </button>
+          ))}
+        </div>
+      </Card>
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Company profile"><div className="grid gap-3 sm:grid-cols-2">
           <FormField label="Company"><input className="input" defaultValue="Winner Apparels Ltd." /></FormField><FormField label="Factory"><input className="input" defaultValue="Gazipur Factory" /></FormField>

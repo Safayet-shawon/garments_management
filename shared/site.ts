@@ -101,3 +101,11 @@ export const typeInfo: Record<GarmentType, { label: string; moq: number; leadTim
   chino: { label: 'Chino Trousers', moq: 800, leadTimeDays: 55 },
   sweatshirt: { label: 'Sweatshirts', moq: 500, leadTimeDays: 50 },
 }
+
+const clip = (s: string, n: number) => (s.length <= n ? s : s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…')
+export interface ProductMetaInput { name: string; category: string; colors: string[]; sizes: string[]; moq: number; leadTimeDays: number }
+/** Title and description for a collection detail page (same text in the browser and in the server-rendered HTML). */
+export const productMeta = (p: ProductMetaInput) => ({
+  title: clip(`${p.name} Manufacturer | ${SITE.name}`, 60),
+  description: clip(`${p.name} made to order in Bangladesh: ${p.colors.slice(0, 4).join(', ')} and more, sizes ${p.sizes[0] ?? 'S'} to ${p.sizes[p.sizes.length - 1] ?? 'XL'}. MOQ ${p.moq} pcs, ${p.leadTimeDays} day lead time.`, 158),
+})

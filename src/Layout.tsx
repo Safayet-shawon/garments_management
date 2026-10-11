@@ -1,19 +1,22 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { BarChart3, Bell, Boxes, ChevronDown, ChevronsLeft, ChevronsRight, Factory, LayoutDashboard, Menu, Plus, Search, Settings, ShoppingCart, Shirt, Users, X, CheckCircle2, AlertCircle, Info, Globe, Sun, Moon } from 'lucide-react'
+import { BarChart3, Bell, LogOut, CloudCheck, CloudOff, RefreshCw, Boxes, ChevronDown, ChevronsLeft, ChevronsRight, Factory, LayoutDashboard, Menu, Plus, Search, Settings, ShoppingCart, Shirt, Users, X, CheckCircle2, AlertCircle, Info, Globe, Sun, Moon } from 'lucide-react'
 import { useStore, useUI, useActions, matStatus, planRequirements, planReady } from './store'
 import { cx, LoadingState } from './ui'
 import { ModalHost } from './modals'
 import { Logo, LogoMark } from './Logo'
+import { ThemeToggle } from './ThemeToggle'
+import { useAuth } from './auth'
+import { useSeo } from './seo'
 
 type NavItem = { label: string; to: string; end?: boolean }
 const NAV: { label: string; icon: ReactNode; base: string; items: NavItem[] }[] = [
   { label: 'Catalog', icon: <Shirt size={17} />, base: '/products|/catalog', items: [{ label: 'All Styles', to: '/products' }, { label: 'Categories', to: '/catalog/categories' }, { label: 'Brands', to: '/catalog/brands' }, { label: 'Attributes', to: '/catalog/attributes' }] },
   { label: 'Inventory', icon: <Boxes size={17} />, base: '/inventory', items: [{ label: 'Overview', to: '/inventory', end: true }, { label: 'Raw Materials', to: '/inventory/raw-materials' }, { label: 'Finished Goods', to: '/inventory/finished-goods' }, { label: 'Warehouses', to: '/inventory/warehouses' }, { label: 'Stock Movements', to: '/inventory/movements' }, { label: 'Reservations', to: '/inventory/reservations' }, { label: 'Low Stock', to: '/inventory/low-stock' }] },
-  { label: 'Manufacturing', icon: <Factory size={17} />, base: '/manufacturing', items: [{ label: 'Production Dashboard', to: '/manufacturing', end: true }, { label: 'Production Plans', to: '/manufacturing/plans' }, { label: 'Material Requirements', to: '/manufacturing/requirements' }, { label: 'Cutting', to: '/manufacturing/cutting' }, { label: 'Sewing', to: '/manufacturing/sewing' }, { label: 'Finishing', to: '/manufacturing/finishing' }, { label: 'Quality Control', to: '/manufacturing/qc' }, { label: 'Production Reports', to: '/manufacturing/reports' }] },
+  { label: 'Manufacturing', icon: <Factory size={17} />, base: '/manufacturing', items: [{ label: 'Production Dashboard', to: '/manufacturing', end: true }, { label: 'Production Plans', to: '/manufacturing/plans' }, { label: 'Material Requirements', to: '/manufacturing/requirements' }, { label: 'Planning Lab', to: '/manufacturing/planning-lab' }, { label: 'Cutting', to: '/manufacturing/cutting' }, { label: 'Sewing', to: '/manufacturing/sewing' }, { label: 'Finishing', to: '/manufacturing/finishing' }, { label: 'Quality Control', to: '/manufacturing/qc' }, { label: 'Production Reports', to: '/manufacturing/reports' }] },
   { label: 'Procurement', icon: <ShoppingCart size={17} />, base: '/procurement', items: [{ label: 'Overview', to: '/procurement', end: true }, { label: 'Suppliers', to: '/procurement/suppliers' }, { label: 'Purchase Requirements', to: '/procurement/requirements' }, { label: 'Purchase Orders', to: '/procurement/orders' }, { label: 'Receiving', to: '/procurement/receiving' }] },
   { label: 'HR', icon: <Users size={17} />, base: '/hr', items: [{ label: 'HR Dashboard', to: '/hr', end: true }, { label: 'Employees', to: '/hr/employees' }, { label: 'Departments', to: '/hr/departments' }, { label: 'Designations', to: '/hr/designations' }, { label: 'Attendance', to: '/hr/attendance' }, { label: 'Leave', to: '/hr/leave' }, { label: 'Salary', to: '/hr/salary' }, { label: 'Payroll', to: '/hr/payroll' }] },
-  { label: 'Merchandising', icon: <Globe size={17} />, base: '/merchandising', items: [{ label: 'Overview', to: '/merchandising', end: true }, { label: 'Buyers', to: '/merchandising/buyers' }, { label: 'Buyer Orders', to: '/merchandising/orders' }, { label: 'Shipments', to: '/merchandising/shipments' }, { label: 'Countries', to: '/merchandising/countries' }] },
+  { label: 'Merchandising', icon: <Globe size={17} />, base: '/merchandising', items: [{ label: 'Overview', to: '/merchandising', end: true }, { label: 'Buyers', to: '/merchandising/buyers' }, { label: 'Buyer Orders', to: '/merchandising/orders' }, { label: 'Shipments', to: '/merchandising/shipments' }, { label: 'Countries', to: '/merchandising/countries' }, { label: 'Inquiries', to: '/merchandising/inquiries' }] },
   { label: 'Reports', icon: <BarChart3 size={17} />, base: '/reports', items: [{ label: 'Export', to: '/reports/sales' }, { label: 'Production', to: '/reports/production' }, { label: 'Inventory', to: '/reports/inventory' }, { label: 'Procurement', to: '/reports/procurement' }, { label: 'HR', to: '/reports/hr' }] },
   { label: 'Settings', icon: <Settings size={17} />, base: '/settings', items: [{ label: 'Users', to: '/settings/users' }, { label: 'Roles & Permissions', to: '/settings/roles' }, { label: 'System Settings', to: '/settings/system' }] },
 ]
@@ -179,14 +182,26 @@ function Gate() {
   return loading ? <><div className="fixed inset-x-0 top-0 z-[70] h-[3px] overflow-hidden"><div className="wa-loadbar h-full w-1/3 bg-gradient-to-r from-gold-400 to-gold-600" /></div><LoadingState /></> : <div className="page"><Outlet /></div>
 }
 
-function ThemeToggle() {
-  const [dark, setDark] = useState(() => { try { const v = localStorage.getItem('wa-theme'); if (v) return v === 'dark' } catch { /* ignore */ } return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false })
-  useEffect(() => { document.documentElement.classList.toggle('dark', dark); try { localStorage.setItem('wa-theme', dark ? 'dark' : 'light') } catch { /* ignore */ } }, [dark])
+function SyncBadge() {
+  const { sync } = useUI()
+  if (sync.mode === 'offline') return <span className="hidden items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 md:inline-flex" title="No database connection: changes live in this browser only"><CloudOff size={12} />Demo data</span>
+  const err = !!sync.error
   return (
-    <button onClick={() => setDark(!dark)} className="relative h-8 w-14 shrink-0 rounded-full border border-slate-200 bg-slate-100 transition-colors" title={dark ? 'Switch to light mode' : 'Switch to dark mode'} aria-label="Toggle theme">
-      <span className={cx('absolute top-0.5 flex h-6 w-6 items-center justify-center rounded-full shadow transition-all duration-300', dark ? 'left-[30px] bg-gold-500 text-brand-900' : 'left-0.5 bg-white text-gold-600')}>{dark ? <Moon size={14} /> : <Sun size={14} />}</span>
-    </button>
+    <span className={cx('hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset md:inline-flex', err ? 'bg-red-50 text-red-700 ring-red-600/20' : 'bg-emerald-50 text-emerald-700 ring-emerald-600/20')} title={err ? sync.error! : 'Connected to the database'} role="status">
+      {err ? <CloudOff size={12} /> : sync.pending ? <RefreshCw size={12} className="animate-spin" /> : <CloudCheck size={12} />}{err ? 'Retrying…' : sync.pending ? 'Saving…' : 'Saved'}
+    </span>
   )
+}
+
+function useErpTitle() {
+  const { pathname } = useLocation()
+  const label = (() => {
+    if (pathname === '/dashboard') return 'Dashboard'
+    let best: { len: number; label: string } | null = null
+    for (const g of NAV) for (const it of g.items) if ((pathname === it.to || pathname.startsWith(it.to + '/')) && (!best || it.to.length > best.len)) best = { len: it.to.length, label: it.label }
+    return best?.label ?? 'Business Management'
+  })()
+  useSeo({ title: `${label} · Winner Apparels`, description: 'Winner Apparels business management system.', index: false })
 }
 
 function Splash() {
@@ -208,6 +223,8 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobile, setMobile] = useState(false)
   const { pathname } = useLocation()
+  const auth = useAuth()
+  useErpTitle()
   useEffect(() => { setMobile(false); window.scrollTo(0, 0) }, [pathname])
   return (
     <div className="flex h-screen overflow-hidden">
@@ -219,12 +236,14 @@ export default function Layout() {
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 md:inline-flex" title="All data shown is sample data"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />Demo Environment</span>
             <div className="hidden border-l border-slate-200 pl-3 text-right leading-tight 22xl:block"><div className="text-xs font-semibold text-slate-800">Winner Apparels Ltd.</div><div className="text-[11px] text-slate-500">Gazipur Factory</div></div>
+            <SyncBadge />
             <ThemeToggle />
             <CreateMenu />
             <Notifications />
             <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-gold-400 to-gold-600 text-xs font-semibold text-brand-900">SS</div>
-              <div className="hidden leading-tight sm:block"><div className="text-xs font-semibold text-slate-800">Safayet Shawon</div><div className="text-[11px] text-slate-500">Administrator</div></div>
+              <div className="hidden leading-tight sm:block"><div className="text-xs font-semibold text-slate-800">{auth.user?.name ?? 'Safayet Shawon'}</div><div className="text-[11px] text-slate-500 capitalize">{auth.user?.role ?? 'Administrator'}</div></div>
+              {auth.status === 'authed' && <button onClick={auth.logout} className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100" title="Sign out" aria-label="Sign out"><LogOut size={16} /></button>}
             </div>
           </div>
         </header>

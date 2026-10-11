@@ -1,4 +1,4 @@
-import { FAQ, PAGES, SITE, slugify, type PageMeta } from '../shared/site.js'
+import { FAQ, PAGES, SITE, productMeta, slugify, type PageMeta } from '../shared/site.js'
 import type { PublicCatalog, PublicProduct } from './catalog.js'
 import { config } from './config.js'
 
@@ -63,8 +63,7 @@ export function renderRoute(pathname: string, catalog: PublicCatalog): RenderedM
 }
 
 function productPage(p: PublicProduct, catalog: PublicCatalog) {
-  const title = clip(`${p.name} Manufacturer | Winner Apparels`, 60)
-  const description = clip(`${p.name} made to order in Bangladesh: ${p.colors.slice(0, 4).join(', ')} and more, sizes ${p.sizes[0] ?? 'S'} to ${p.sizes[p.sizes.length - 1] ?? 'XL'}. MOQ ${p.moq} pcs, ${p.leadTimeDays} day lead time.`, 158)
+  const { title, description } = productMeta(p)
   const path = `/collections/${p.slug}`
   const meta = { path, title, description, h1: p.name, keywords: [p.category.toLowerCase() + ' manufacturer', slugify(p.name).replace(/-/g, ' ')], index: true, canonical: abs(path), image: abs(p.image), type: 'product' as const }
   const jsonLd = [
@@ -95,7 +94,7 @@ export function headHtml(r: RenderedMeta): string {
     `<meta name="twitter:title" content="${esc(m.title)}" />`,
     `<meta name="twitter:description" content="${esc(m.description)}" />`,
     `<meta name="twitter:image" content="${esc(m.image)}" />`,
-    ...r.jsonLd.map((j) => `<script type="application/ld+json">${JSON.stringify(j).replace(/</g, '\\u003c')}</script>`),
+    ...r.jsonLd.map((j) => `<script type="application/ld+json" data-ssr="${esc(m.path)}">${JSON.stringify(j).replace(/</g, '\\u003c')}</script>`),
   ]
   return parts.filter(Boolean).join('\n    ')
 }
