@@ -22,7 +22,7 @@ export default function PublicLayout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[90] focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:shadow-lg">Skip to content</a>
       <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled || open ? 'glass-bar' : 'bg-transparent'}`}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <Link to="/" aria-label="Winner Apparels home" className="shrink-0"><Logo size={36} light={!scrolled && !open && pathname === '/'} /></Link>
+          <Link to="/" className="shrink-0"><Logo size={36} light={!scrolled && !open && pathname === '/'} /></Link>
           <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
             {LINKS.map(([to, label]) => (
               <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `rounded-full px-4 py-2 text-sm font-medium transition-colors ${isActive ? 'bg-gold-500/15 text-gold-600 dark:text-gold-400' : (!scrolled && pathname === '/' ? 'text-white/85 hover:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white')}`}>{label}</NavLink>

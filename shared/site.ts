@@ -87,12 +87,8 @@ export const typeForCategory = (category: string): GarmentType => {
   if (c.includes('shirt') && !c.includes('t-shirt') && !c.includes('tee')) return 'shirt'
   return 'tee'
 }
-export const IMAGE_COLORS = ['black', 'white', 'navy', 'grey', 'green', 'blue', 'khaki', 'maroon', 'olive', 'indigo', 'red'] as const
-export const imageFor = (type: GarmentType, color?: string, width: 320 | 640 = 640) => {
-  const c = (color || '').toLowerCase()
-  const col = (IMAGE_COLORS as readonly string[]).includes(c) ? c : 'navy'
-  return `/img/garments/${type}-${col}-${width}.webp`
-}
+/** One studio photograph per garment type (colour variants are listed on the page, not photographed separately). */
+export const imageFor = (type: GarmentType, _color?: string, width: 320 | 640 = 640) => `/img/products/${type}-${width}.webp`
 export const typeInfo: Record<GarmentType, { label: string; moq: number; leadTimeDays: number }> = {
   tee: { label: 'T-Shirts', moq: 500, leadTimeDays: 35 },
   polo: { label: 'Polo Shirts', moq: 600, leadTimeDays: 40 },

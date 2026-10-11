@@ -96,3 +96,6 @@ button:disabled { cursor: not-allowed; }
 .dark .recharts-default-tooltip { background-color: #121a36 !important; border-color: #2c3868 !important; color: #e6e9f5; }
 .dark .recharts-legend-item-text { color: #c3c9e0 !important; }
 .dark a > .card:hover, .dark .card.lift:hover { box-shadow: 0 12px 28px -10px rgba(0,0,0,.7); }
+
+.dark .text-gold-600 { color: #e6bd4a !important; }
+.dark .bg-gold-50 { background-color: rgba(230,189,74,.14) !important; }

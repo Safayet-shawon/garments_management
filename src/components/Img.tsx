@@ -19,7 +19,7 @@ export const HeroImg = memo(function HeroImg({ alt = '' }: { alt?: string }) {
     <picture>
       <source type="image/avif" srcSet="/img/hero-800.avif 800w, /img/hero-1600.avif 1600w" sizes="100vw" />
       <source type="image/webp" srcSet="/img/hero-800.webp 800w, /img/hero-1600.webp 1600w" sizes="100vw" />
-      <img src="/img/hero-1600.webp" alt={alt} width={1600} height={900} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-right" />
+      <img src="/img/hero-1600.webp" alt={alt} width={1600} height={900} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
     </picture>
   )
 })

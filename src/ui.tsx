@@ -1,4 +1,5 @@
-import { cloneElement, isValidElement, useEffect, useRef, useState, type ReactNode } from 'react'
+import { cloneElement, isValidElement, memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useDebounced } from './hooks'
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, ChevronsUpDown, ChevronUp, ChevronDown, Inbox, MoreHorizontal, RotateCw, Search, Upload, X, ImageIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Spinner } from './Logo'
@@ -39,11 +40,11 @@ const statusTone: Record<string, string> = {
   'In Progress': 'blue', Ordered: 'blue', 'Partially Received': 'amber', Shipped: 'blue', 'PO Created': 'blue', Calculated: 'blue', Reviewed: 'amber', Contract: 'blue', Permanent: 'gray', Info: 'blue',
   Sampling: 'amber', 'In Production': 'blue', 'Ready to Ship': 'gold', 'LC at sight': 'gray', Issued: 'gray', RECEIPT: 'green', ISSUE: 'amber', ADJUSTMENT: 'blue', TRANSFER: 'gray', RETURN: 'amber', PRODUCTION_CONSUMPTION: 'red', PRODUCTION_OUTPUT: 'green',
 }
-export const StatusBadge = ({ status, label, color }: { status: string; label?: string; color?: string }) => (
+export const StatusBadge = memo(({ status, label, color }: { status: string; label?: string; color?: string }) => (
   <span className={cx('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset whitespace-nowrap', tone[color || statusTone[status] || 'gray'])}>
     <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />{label ?? status.replace(/_/g, ' ')}
   </span>
-)
+))
 
 export const PageHeader = ({ title, subtitle, actions, back }: { title: string; subtitle?: string; actions?: ReactNode; back?: string }) => (
   <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
@@ -71,7 +72,7 @@ export const StatCard = ({ label, value, sub, icon, accent = 'brand', to, onClic
   return to ? <Link to={to}>{inner}</Link> : inner
 }
 
-export const ProgressBar = ({ value, color = 'brand', showLabel = true, h = 'h-2' }: { value: number; color?: string; showLabel?: boolean; h?: string }) => {
+export const ProgressBar = memo(({ value, color = 'brand', showLabel = true, h = 'h-2' }: { value: number; color?: string; showLabel?: boolean; h?: string }) => {
   const c = value >= 100 ? 'bg-emerald-500' : color === 'amber' ? 'bg-amber-500' : color === 'red' ? 'bg-red-500' : 'bg-gradient-to-r from-gold-400 to-gold-500'
   const [mounted, setMounted] = useState(false)
   useEffect(() => { const t = requestAnimationFrame(() => setMounted(true)); return () => cancelAnimationFrame(t) }, [])
@@ -81,7 +82,7 @@ export const ProgressBar = ({ value, color = 'brand', showLabel = true, h = 'h-2
       {showLabel && <span className="w-9 text-right text-xs tabular-nums text-slate-500">{Math.round(value)}%</span>}
     </div>
   )
-}
+})
 
 export const Card = ({ title, action, children, className, pad = true }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; pad?: boolean }) => (
   <section className={cx('card', className)}>
@@ -231,7 +232,7 @@ export const FileUploadTile = ({ label, preview, color, onPick, onClear }: { lab
       <div onClick={() => !preview && ref.current?.click()} className={cx('relative flex aspect-[4/5] cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed text-center transition', preview ? 'border-transparent' : 'border-slate-300 bg-slate-50 hover:border-brand-500 hover:bg-brand-50')}>
         {preview ? (
           <>
-            {preview.startsWith('sample:') ? <SampleShirt color={preview.slice(7)} /> : <img src={preview} alt={label} className="h-full w-full object-cover" />}
+            {preview.startsWith('sample:') ? <SampleShirt type={preview.slice(7)} /> : <img src={preview} alt={label} className="h-full w-full object-cover" />}
             <button onClick={(e) => { e.stopPropagation(); onClear() }} className="absolute right-1.5 top-1.5 rounded-full bg-white/90 p-1 text-slate-600 opacity-0 shadow group-hover:opacity-100"><X size={13} /></button>
             <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-medium text-white"><Check size={10} />Uploaded</span>
           </>
@@ -240,18 +241,14 @@ export const FileUploadTile = ({ label, preview, color, onPick, onClear }: { lab
         )}
         <input ref={ref} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(URL.createObjectURL(f)) }} />
       </div>
-      <div className="mt-1 flex items-center justify-between text-xs font-medium text-slate-600"><span>{label}</span>{!preview && <button className="text-[11px] font-normal text-brand-600 hover:underline" onClick={() => onPick(`sample:${color || 'Grey'}`)}>Use sample</button>}</div>
+      <div className="mt-1 flex items-center justify-between text-xs font-medium text-slate-600"><span>{label}</span>{!preview && <button className="text-[11px] font-normal text-brand-600 hover:underline" onClick={() => onPick(`sample:${color || 'tee'}`)}>Use sample</button>}</div>
     </div>
   )
 }
 const swatch: Record<string, string> = { Green: '#3f8f5f', White: '#f1f5f9', Black: '#1f2937', Blue: '#3b6fc9', Navy: '#1e3a6e', Grey: '#94a3b8', Red: '#c0392b', Khaki: '#c3b091', Olive: '#6b7a3a', Indigo: '#3f3f8f', Maroon: '#7b2d3b', Beige: '#d9c7a3', Charcoal: '#4b5563' }
 export const colorHex = (c: string) => swatch[c] || '#94a3b8'
-export const SampleShirt = ({ color }: { color: string }) => (
-  <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-slate-100 to-slate-200">
-    <svg viewBox="0 0 100 100" className="h-3/4 w-3/4 drop-shadow">
-      <path d="M30 14 L10 28 L20 44 L28 40 L28 88 L72 88 L72 40 L80 44 L90 28 L70 14 C65 22 35 22 30 14Z" fill={colorHex(color)} stroke="rgba(0,0,0,.25)" strokeWidth="1.5" />
-    </svg>
-  </div>
+export const SampleShirt = ({ type = 'tee', alt = 'Product photo' }: { type?: string; alt?: string; color?: string }) => (
+  <img src={`/img/products/${type}-320.webp`} alt={alt} width={320} height={400} loading="lazy" decoding="async" className="h-full w-full object-cover" />
 )
 export const ImagePlaceholder = () => <div className="flex h-full items-center justify-center bg-slate-100 text-slate-300"><ImageIcon /></div>
 
@@ -285,13 +282,17 @@ export function DataTable<T>({ rows, columns, filters = [], rowKey, onRowClick, 
   const [fv, setFv] = useState<string[]>(filters.map(() => ''))
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(defaultSort || null)
   const [page, setPage] = useState(0)
-  const [loading, setLoading] = useState(true)
-  useEffect(() => { const t = setTimeout(() => setLoading(false), 350); return () => clearTimeout(t) }, [])
-
-  let data = rows
-  if (q) { const s = q.toLowerCase(); data = data.filter((r) => columns.some((c) => (c.search ? c.search(r) : c.sort ? String(c.sort(r)) : '').toLowerCase().includes(s))) }
-  filters.forEach((f, i) => { if (fv[i]) data = data.filter((r) => f.get(r) === fv[i]) })
-  if (sort) { const c = columns.find((x) => x.key === sort.key); if (c?.sort) data = [...data].sort((a, b) => { const x = c.sort!(a), y = c.sort!(b); return (x > y ? 1 : x < y ? -1 : 0) * sort.dir }) }
+  const colsRef = useRef(columns); colsRef.current = columns
+  const filtersRef = useRef(filters); filtersRef.current = filters
+  const dq = useDebounced(q, 200) // typing never re-filters the whole table on every keystroke
+  const data = useMemo(() => {
+    let d = rows
+    const cols = colsRef.current
+    if (dq) { const t = dq.toLowerCase(); d = d.filter((r) => cols.some((c) => (c.search ? c.search(r) : c.sort ? String(c.sort(r)) : '').toLowerCase().includes(t))) }
+    filtersRef.current.forEach((f, i) => { if (fv[i]) d = d.filter((r) => f.get(r) === fv[i]) })
+    if (sort) { const c = cols.find((x) => x.key === sort.key); if (c?.sort) { const key = c.sort; d = [...d].sort((x, y) => { const m = key(x), n = key(y); return (m > n ? 1 : m < n ? -1 : 0) * sort.dir }) } }
+    return d
+  }, [rows, dq, fv, sort])
   const pages = Math.max(1, Math.ceil(data.length / pageSize))
   const cur = Math.min(page, pages - 1)
   const view = data.slice(cur * pageSize, cur * pageSize + pageSize)
@@ -314,8 +315,7 @@ export function DataTable<T>({ rows, columns, filters = [], rowKey, onRowClick, 
             {actions && <th className="th w-10" />}
           </tr></thead>
           <tbody className="divide-y divide-slate-100">
-            {loading ? Array.from({ length: 5 }).map((_, i) => <tr key={i}><td colSpan={columns.length + 1} className="px-3 py-2"><Sk className="h-6" /></td></tr>)
-              : view.map((r) => (
+            {view.map((r) => (
                 <tr key={rowKey(r)} className={cx('hover:bg-slate-50/80', onRowClick && 'cursor-pointer')} onClick={() => onRowClick?.(r)}>
                   {columns.map((c) => <td key={c.key} className={cx('td', c.align === 'right' && 'text-right', c.className)}>{c.render ? c.render(r) : String((r as any)[c.key] ?? '')}</td>)}
                   {actions && <td className="td w-10"><RowMenu row={r} actions={typeof actions === 'function' ? actions(r) : actions} /></td>}
@@ -323,7 +323,7 @@ export function DataTable<T>({ rows, columns, filters = [], rowKey, onRowClick, 
               ))}
           </tbody>
         </table>
-        {!loading && !view.length && (empty || <EmptyState title="No records found" text="Try adjusting your search or filters." />)}
+        {!view.length && (empty || <EmptyState title="No records found" text="Try adjusting your search or filters." />)}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-3 py-2 text-xs text-slate-500">
         <span>{data.length ? `${cur * pageSize + 1}–${Math.min(data.length, cur * pageSize + pageSize)} of ${data.length}` : '0 results'}</span>

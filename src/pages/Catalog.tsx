@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Check, ChevronLeft, ChevronRight, Plus, Sparkles, Trash2 } from 'lucide-react'
 import { useStore, reservedFor, productOf } from '../store'
+import { typeForCategory } from '../../shared/site'
 import { brandCode, catCode, fobOf, genVariants, type BomLine, type Product, type Variant } from '../data'
 import { Card, DataTable, EmptyState, FileUploadTile, FormField, Money, usd, PageHeader, Select, StatusBadge, Stepper, Tabs, cx, fmt, fmtDate, useConfirm, colorHex, SampleShirt } from '../ui'
 
@@ -16,7 +17,7 @@ export function Products() {
         rows={s.products} rowKey={(p) => p.id} onRowClick={(p) => nav(`/products/${p.id}`)} pageSize={8} searchPlaceholder="Search name, SKU, brand…"
         filters={[{ label: 'Category', options: [...new Set(s.products.map((p) => p.category))], get: (p) => p.category }, { label: 'Label', options: [...new Set(s.products.map((p) => p.brand))], get: (p) => p.brand }, { label: 'Status', options: ['Active', 'Draft', 'Archived'], get: (p) => p.status }]}
         columns={[
-          { key: 'name', header: 'Product', sort: (p) => p.name, search: (p) => `${p.name} ${p.sku} ${p.variants.map((v) => v.sku).join(' ')}`, render: (p) => <div className="flex items-center gap-3"><div className="h-9 w-9 shrink-0 overflow-hidden rounded-md border border-slate-200"><SampleShirt color={p.variants[0]?.combo.Color || 'Grey'} /></div><span className="font-medium text-slate-900">{p.name}</span></div> },
+          { key: 'name', header: 'Product', sort: (p) => p.name, search: (p) => `${p.name} ${p.sku} ${p.variants.map((v) => v.sku).join(' ')}`, render: (p) => <div className="flex items-center gap-3"><div className="h-9 w-9 shrink-0 overflow-hidden rounded-md border border-slate-200"><SampleShirt type={typeForCategory(p.category)} alt={p.name} /></div><span className="font-medium text-slate-900">{p.name}</span></div> },
           { key: 'sku', header: 'SKU', sort: (p) => p.sku, render: (p) => <span className="font-mono text-xs text-slate-600">{p.sku}</span> },
           { key: 'category', header: 'Category', sort: (p) => p.category, search: (p) => p.category },
           { key: 'brand', header: 'Buyer Label', sort: (p) => p.brand, search: (p) => p.brand },
@@ -77,7 +78,7 @@ export function ProductNew() {
   const groups = assoc !== 'None' && attrs[assoc]?.length ? attrs[assoc] : []
   const imageCount = Object.values(imgs).length
   const canNext = step === 0 ? basic.name.trim() && basic.category && basic.brand : step === 1 ? variants.length > 0 : true
-  const fillSamples = () => { const n: Record<string, string> = {}; groups.forEach((g) => SLOTS.forEach((sl) => (n[`${g}|${sl}`] = `sample:${g}`))); SLOTS.forEach((sl) => (n[`General|${sl}`] = 'sample:Grey')); setImgs(n) }
+  const fillSamples = () => { const n: Record<string, string> = {}; groups.forEach((g) => SLOTS.forEach((sl) => (n[`${g}|${sl}`] = `sample:${typeForCategory(basic.category)}`))); SLOTS.forEach((sl) => (n[`General|${sl}`] = `sample:${typeForCategory(basic.category)}`)); setImgs(n) }
 
   const save = () => {
     const first = variants[0]
@@ -165,12 +166,12 @@ export function ProductNew() {
           {groups.map((g) => (
             <div key={g} className="mb-6">
               <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">{assoc === 'Color' && <i className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ background: colorHex(g) }} />}{g}<span className="text-xs font-normal text-slate-400">{SLOTS.filter((sl) => imgs[`${g}|${sl}`]).length}/4 uploaded</span></div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:max-w-3xl">{SLOTS.map((sl) => <FileUploadTile key={sl} label={sl} color={g} preview={imgs[`${g}|${sl}`]} onPick={(u) => setImgs({ ...imgs, [`${g}|${sl}`]: u })} onClear={() => { const n = { ...imgs }; delete n[`${g}|${sl}`]; setImgs(n) }} />)}</div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:max-w-3xl">{SLOTS.map((sl) => <FileUploadTile key={sl} label={sl} color={typeForCategory(basic.category)} preview={imgs[`${g}|${sl}`]} onPick={(u) => setImgs({ ...imgs, [`${g}|${sl}`]: u })} onClear={() => { const n = { ...imgs }; delete n[`${g}|${sl}`]; setImgs(n) }} />)}</div>
             </div>
           ))}
           <div className="border-t border-slate-100 pt-5">
             <div className="mb-2 text-sm font-semibold text-slate-800">General Product Images <span className="text-xs font-normal text-slate-400">— not tied to any attribute</span></div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:max-w-3xl">{SLOTS.map((sl) => <FileUploadTile key={sl} label={sl} preview={imgs[`General|${sl}`]} onPick={(u) => setImgs({ ...imgs, [`General|${sl}`]: u })} onClear={() => { const n = { ...imgs }; delete n[`General|${sl}`]; setImgs(n) }} />)}</div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:max-w-3xl">{SLOTS.map((sl) => <FileUploadTile key={sl} label={sl} color={typeForCategory(basic.category)} preview={imgs[`General|${sl}`]} onPick={(u) => setImgs({ ...imgs, [`General|${sl}`]: u })} onClear={() => { const n = { ...imgs }; delete n[`General|${sl}`]; setImgs(n) }} />)}</div>
           </div>
         </Card>
       )}
@@ -244,7 +245,7 @@ export function ProductDetail() {
       )}
       {tab === 'Images' && (
         <Card title={`Product Images — grouped by ${p.imageBy}`}>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">{(colors.length ? colors : ['Grey']).flatMap((c) => ['Front', 'Back', 'Side', 'Detail'].map((sl) => <div key={c + sl}><div className="aspect-[4/5] overflow-hidden rounded-lg border border-slate-200"><SampleShirt color={c} /></div><div className="mt-1 text-xs text-slate-600">{c} · {sl}</div></div>)).slice(0, 12)}</div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">{(colors.length ? colors : ['Grey']).flatMap((c) => ['Front', 'Back', 'Side', 'Detail'].map((sl) => <div key={c + sl}><div className="aspect-[4/5] overflow-hidden rounded-lg border border-slate-200"><SampleShirt type={typeForCategory(p.category)} alt={`${p.name} ${c} ${sl}`} /></div><div className="mt-1 text-xs text-slate-600">{c} · {sl}</div></div>)).slice(0, 12)}</div>
         </Card>
       )}
     </>

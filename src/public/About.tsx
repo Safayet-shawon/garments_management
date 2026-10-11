@@ -27,7 +27,7 @@ export default function About() {
           <Link to="/contact" className="btn-primary btn-lg mt-8">Talk to a merchandiser <ArrowRight size={18} /></Link>
         </div>
         <picture>
-          <img src="/img/about-960.webp" srcSet="/img/about-480.webp 480w, /img/about-960.webp 960w" sizes="(max-width: 768px) 100vw, 560px" width={960} height={640} alt="Rolls of dyed fabric beside a line of gold stitching" loading="eager" decoding="async" className="w-full rounded-3xl border border-slate-200 shadow-card" />
+          <img src="/img/about-960.webp" srcSet="/img/about-480.webp 480w, /img/about-960.webp 960w" sizes="(max-width: 768px) 100vw, 560px" width={960} height={640} alt="A quality inspector checking folded cotton t-shirts beside rolls of fabric" loading="eager" decoding="async" className="w-full rounded-3xl border border-slate-200 shadow-card" />
         </picture>
       </div>
 

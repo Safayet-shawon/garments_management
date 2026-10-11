@@ -32,7 +32,7 @@ export default function Collections() {
       </div>
 
       <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-        {data ? list.map((p, i) => <ProductCard key={p.slug} p={p} priority={i < 4} />) : error ? null : Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)}
+        {data ? list.map((p, i) => <ProductCard key={p.slug} p={p} priority={i < 4} heading="h2" />) : error ? null : Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)}
       </div>
       {data && !list.length && <div className="mt-10 rounded-xl border border-slate-200 bg-white p-10 text-center text-slate-600">No styles match "{dq}". <button className="font-medium text-brand-600 underline" onClick={() => { setQ(''); setType('all') }}>Clear filters</button></div>}
       {error && <div className="mt-10 rounded-xl border border-slate-200 bg-white p-10 text-center"><p className="text-slate-600">We could not load the collections.</p><button className="btn-primary mt-4" onClick={retry}>Try again</button></div>}

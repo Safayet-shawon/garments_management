@@ -1,4 +1,4 @@
-// Generates every raster image of the website from vector sources and compresses them to WebP/AVIF/JPEG.
+// Generates the brand icons and web manifest from the vector logo (photographs are handled by process-photos.mjs).
 //   node scripts/generate-images.mjs
 // Outputs: public/img/garments/<type>-<colour>-<320|640>.webp, public/img/hero-*.{avif,webp}, og-image.jpg, app icons.
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -78,64 +78,14 @@ async function webp(svg, width, file, quality = 78) {
 }
 
 async function main() {
-  await mkdir(join(root, 'img', 'garments'), { recursive: true })
-  let n = 0
-  for (const t of TYPES) for (const [name, hex] of Object.entries(COLORS)) {
-    const svg = garment(t, hex)
-    for (const w of [320, 640]) { await webp(svg, w, join(root, 'img', 'garments', `${t}-${name}-${w}.webp`)); n++ }
-  }
-  console.log(`garments: ${n} images`)
-
-  // ---- hero: three garments over a navy gradient with a gold stitched thread
-  const hero = (w, h) => `
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="${w}" height="${h}">
-    <defs>
-      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1432"/><stop offset=".6" stop-color="#14214f"/><stop offset="1" stop-color="#1f3a8a"/></linearGradient>
-      <radialGradient id="glow" cx="72%" cy="45%" r="45%"><stop offset="0" stop-color="#d4a21f" stop-opacity=".35"/><stop offset="1" stop-color="#d4a21f" stop-opacity="0"/></radialGradient>
-      <pattern id="w" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 0L6 6M6 0L0 6" stroke="#fff" stroke-opacity=".035"/></pattern>
-    </defs>
-    <rect width="1600" height="900" fill="url(#g)"/><rect width="1600" height="900" fill="url(#w)"/><rect width="1600" height="900" fill="url(#glow)"/>
-    <path d="M0 760 C 300 640 520 860 820 740 S 1340 640 1600 720" fill="none" stroke="#e6bd4a" stroke-width="3" stroke-dasharray="14 12" stroke-linecap="round" opacity=".8"/>
-  </svg>`
-  const layers = []
-  const place = async (type, color, w, left, top, angle) => {
-    const png = await sharp(Buffer.from(garment(type, COLORS[color]).replace(/<rect width="400" height="480" fill="url\(#bg\)"\/>/, '').replace(/<ellipse[^>]*\/>/, ''))).resize({ width: w }).rotate(angle, { background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
-    layers.push({ input: png, left, top })
-  }
-  await place('sweatshirt', 'grey', 540, 740, 60, -6)
-  await place('tee', 'white', 480, 1020, 170, 7)
-  await place('polo', 'navy', 450, 560, 290, -10)
-  const bg = Buffer.from(hero(1600, 900))
-  const base = sharp(bg).composite(layers)
-  const heroBuf = await base.png().toBuffer()
-  await sharp(heroBuf).resize({ width: 1600 }).avif({ quality: 48, effort: 4 }).toFile(join(root, 'img', 'hero-1600.avif'))
-  await sharp(heroBuf).resize({ width: 1600 }).webp({ quality: 74, effort: 5 }).toFile(join(root, 'img', 'hero-1600.webp'))
-  await sharp(heroBuf).resize({ width: 800 }).avif({ quality: 46, effort: 4 }).toFile(join(root, 'img', 'hero-800.avif'))
-  await sharp(heroBuf).resize({ width: 800 }).webp({ quality: 72, effort: 5 }).toFile(join(root, 'img', 'hero-800.webp'))
-  console.log('hero: 4 images')
-
-  // ---- about / process illustration: fabric roll + stitched thread
-  const about = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" width="960" height="640"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7f1dc"/><stop offset="1" stop-color="#e8d9a6"/></linearGradient><pattern id="p" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M0 0L8 8M8 0L0 8" stroke="#14214f" stroke-opacity=".08"/></pattern></defs>
-    <rect width="960" height="640" fill="url(#a)"/><rect width="960" height="640" fill="url(#p)"/>
-    ${[0, 1, 2, 3, 4].map((i) => `<rect x="${90 + i * 160}" y="${150 + (i % 2) * 40}" width="120" height="380" rx="60" fill="${['#22336b', '#d4a21f', '#f1f2f5', '#2f7d54', '#7d2a3b'][i]}"/><ellipse cx="${150 + i * 160}" cy="${150 + (i % 2) * 40}" rx="60" ry="22" fill="#000" opacity=".18"/>`).join('')}
-    <path d="M40 590 C 240 520 400 620 600 560 S 860 520 930 570" fill="none" stroke="#14214f" stroke-width="4" stroke-dasharray="16 12" stroke-linecap="round"/></svg>`
-  await sharp(Buffer.from(about)).resize({ width: 960 }).webp({ quality: 74 }).toFile(join(root, 'img', 'about-960.webp'))
-  await sharp(Buffer.from(about)).resize({ width: 480 }).webp({ quality: 72 }).toFile(join(root, 'img', 'about-480.webp'))
-
   // ---- logo mark + icons + OG image
   const mark = (size) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="${size}" height="${size}"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d779"/><stop offset=".55" stop-color="#d9a62e"/><stop offset="1" stop-color="#b8801a"/></linearGradient><linearGradient id="n" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f3a8a"/><stop offset="1" stop-color="#0b1432"/></linearGradient></defs><path d="M32 2L58 17V47L32 62L6 47V17Z" fill="url(#n)" stroke="url(#g)" stroke-width="2.2" stroke-linejoin="round"/><path d="M14 21L23 45L32 29L41 45L50 21" fill="none" stroke="url(#g)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 52H48" stroke="#f3e3b0" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="3.2 3.2"/><path d="M32 9L33.6 13.4L38 15L33.6 16.6L32 21L30.4 16.6L26 15L30.4 13.4Z" fill="url(#g)"/></svg>`
   const icon = (size) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><rect width="${size}" height="${size}" rx="${size * 0.2}" fill="#0b1432"/><g transform="translate(${size * 0.15} ${size * 0.15}) scale(${(size * 0.7) / 64})">${mark(64).replace(/<svg[^>]*>/, '').replace('</svg>', '')}</g></svg>`
   for (const [name, size] of [['icon-192.png', 192], ['icon-512.png', 512], ['apple-touch-icon.png', 180]]) await sharp(Buffer.from(icon(size))).png({ compressionLevel: 9 }).toFile(join(root, name))
-  const og = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630"><defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1432"/><stop offset="1" stop-color="#1f3a8a"/></linearGradient></defs><rect width="1200" height="630" fill="url(#b)"/>
-    <path d="M0 560 C 260 470 420 640 700 540 S 1040 470 1200 540" fill="none" stroke="#e6bd4a" stroke-width="3" stroke-dasharray="14 12" opacity=".8"/>
-    <g transform="translate(90 120)">${mark(150).replace(/<svg[^>]*>/, '').replace('</svg>', '').replace(/^/, '<g transform="scale(2.34)">') + '</g>'}</g>
-    <text x="90" y="410" font-family="Georgia, 'Times New Roman', serif" font-size="84" font-weight="700" fill="#ffffff" letter-spacing="8">WINNER APPARELS</text>
-    <text x="94" y="470" font-family="Arial, Helvetica, sans-serif" font-size="34" fill="#e6bd4a" letter-spacing="3">Export-quality garments, made in Bangladesh</text></svg>`
-  await sharp(Buffer.from(og)).jpeg({ quality: 82, mozjpeg: true }).toFile(join(root, 'og-image.jpg'))
   await writeFile(join(root, 'manifest.webmanifest'), JSON.stringify({
     name: 'Winner Apparels', short_name: 'Winner', description: 'Export garment manufacturer and business management system', start_url: '/', display: 'standalone', background_color: '#0b1432', theme_color: '#0b1432',
     icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }],
   }, null, 2))
-  console.log('icons, og-image, manifest written')
+  console.log('icons and manifest written')
 }
 main().catch((e) => { console.error(e); process.exit(1) })

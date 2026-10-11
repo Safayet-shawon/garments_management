@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BarChart3, Bell, LogOut, CloudCheck, CloudOff, RefreshCw, Boxes, ChevronDown, ChevronsLeft, ChevronsRight, Factory, LayoutDashboard, Menu, Plus, Search, Settings, ShoppingCart, Shirt, Users, X, CheckCircle2, AlertCircle, Info, Globe, Sun, Moon } from 'lucide-react'
 import { useStore, useUI, useActions, matStatus, planRequirements, planReady } from './store'
@@ -8,6 +8,7 @@ import { Logo, LogoMark } from './Logo'
 import { ThemeToggle } from './ThemeToggle'
 import { useAuth } from './auth'
 import { useSeo } from './seo'
+import { useDebounced } from './hooks'
 
 type NavItem = { label: string; to: string; end?: boolean }
 const NAV: { label: string; icon: ReactNode; base: string; items: NavItem[] }[] = [
@@ -70,10 +71,11 @@ function GlobalSearch() {
   const { s } = useStore()
   const nav = useNavigate()
   const [q, setQ] = useState('')
+  const dq = useDebounced(q, 200)
   const [open, setOpen] = useState(false)
   const ref = useOutside(() => setOpen(false))
   const results = useMemo(() => {
-    const t = q.trim().toLowerCase()
+    const t = dq.trim().toLowerCase()
     if (t.length < 2) return []
     const r: { type: string; label: string; sub: string; to: string }[] = []
     s.products.forEach((p) => {
@@ -88,7 +90,7 @@ function GlobalSearch() {
     s.orders.filter((o) => (o.id + o.buyerPO).toLowerCase().includes(t)).forEach((o) => r.push({ type: 'Buyer Order', label: o.id, sub: `${o.buyerPO} · ${s.buyers.find((c) => c.id === o.buyer)?.name || ''}`, to: `/merchandising/orders?open=${o.id}` }))
     s.buyers.filter((b) => b.name.toLowerCase().includes(t)).forEach((b) => r.push({ type: 'Buyer', label: b.name, sub: b.country, to: '/merchandising/buyers' }))
     return r.slice(0, 9)
-  }, [q, s])
+  }, [dq, s])
   return (
     <div ref={ref} className="relative w-full max-w-md">
       <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -177,9 +179,8 @@ function Toasts() {
 }
 
 function Gate() {
-  const [loading, setLoading] = useState(true)
-  useEffect(() => { const t = setTimeout(() => setLoading(false), 260); return () => clearTimeout(t) }, [])
-  return loading ? <><div className="fixed inset-x-0 top-0 z-[70] h-[3px] overflow-hidden"><div className="wa-loadbar h-full w-1/3 bg-gradient-to-r from-gold-400 to-gold-600" /></div><LoadingState /></> : <div className="page"><Outlet /></div>
+  // lazy page chunks show the skeleton while they download; no artificial delay
+  return <Suspense fallback={<LoadingState />}><div className="page"><Outlet /></div></Suspense>
 }
 
 function SyncBadge() {

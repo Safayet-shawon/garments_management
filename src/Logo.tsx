@@ -19,7 +19,7 @@ export const Logo = ({ compact = false, light = false, size = 40 }: { compact?: 
     {!compact && (
       <div className="leading-none">
         <div className={cx('font-display text-[21px] font-bold tracking-[.16em]', light ? 'text-white' : 'text-slate-900 dark:text-white')}>WINNER</div>
-        <div className="mt-1 text-[9px] font-semibold uppercase tracking-[.46em] text-gold-500">Apparels</div>
+        <div className={`mt-1 text-[9px] font-semibold uppercase tracking-[.46em] ${light ? 'text-gold-400' : 'text-gold-600 dark:text-gold-400'}`}>Apparels</div>
       </div>
     )}
   </div>

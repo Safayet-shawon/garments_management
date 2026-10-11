@@ -25,7 +25,7 @@ export default function Home() {
     <>
       <section className="relative isolate overflow-hidden bg-brand-900 text-white">
         <HeroImg />
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-900 via-brand-900/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-900/95 via-brand-900/75 to-brand-900/25" />
         <div className="relative mx-auto flex min-h-[640px] max-w-7xl flex-col justify-center px-4 pb-24 pt-32 sm:px-6">
           <div className="max-w-2xl">
             <div className="hero-in text-xs font-semibold uppercase tracking-[.35em] text-gold-400" style={{ animationDelay: '.05s' }}>Gazipur · Bangladesh · Since {SITE.founded}</div>
@@ -57,13 +57,13 @@ export default function Home() {
         <ol className="relative mt-14 grid gap-8 md:grid-cols-4">
           <div className="absolute left-0 right-0 top-6 hidden border-t-2 border-dashed border-gold-500/60 md:block" aria-hidden="true" />
           {PROCESS.map((s, i) => (
-            <Reveal key={s.title} delay={i * 90}>
-              <li className="relative list-none text-center md:text-left">
+            <li key={s.title} className="relative list-none text-center md:text-left">
+              <Reveal delay={i * 90}>
                 <span className="relative z-10 mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 font-display text-lg font-bold text-white shadow-lg ring-4 ring-[var(--bg)] md:mx-0">{i + 1}</span>
                 <h3 className="mt-5 text-lg font-semibold text-slate-900">{s.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">{s.text}</p>
-              </li>
-            </Reveal>
+              </Reveal>
+            </li>
           ))}
         </ol>
       </section>

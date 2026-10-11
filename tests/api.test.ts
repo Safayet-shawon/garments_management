@@ -116,7 +116,7 @@ describe('public website API', () => {
     expect(r.headers['cache-control']).toContain('max-age=300')
     expect(r.body.products.length).toBeGreaterThanOrEqual(6)
     const tee = r.body.products.find((p: any) => p.slug === 'premium-cotton-t-shirt')
-    expect(tee.image).toMatch(/\/img\/garments\/tee-/)
+    expect(tee.image).toMatch(/\/img\/products\/tee-/)
     expect(JSON.stringify(r.body)).not.toMatch(/purchase|selling|stock/)
     const again = await request(app).get('/api/public/catalog').set('If-None-Match', r.headers.etag)
     expect(again.status).toBe(304)
