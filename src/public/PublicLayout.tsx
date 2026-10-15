@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Mail, MapPin, Menu, Phone, X } from 'lucide-react'
 import { SITE } from '../../shared/site'
 import { Logo } from '../Logo'
+import { ERP_URL, HAS_ERP } from '../mode'
 import { ThemeToggle } from '../ThemeToggle'
 import { api, type PublicProduct } from '../api'
 
@@ -30,7 +31,7 @@ export default function PublicLayout() {
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle className="hidden sm:block" />
-            <Link to="/login" className="btn-secondary hidden sm:inline-flex">Client login</Link>
+            {HAS_ERP ? <Link to="/login" className="btn-secondary hidden sm:inline-flex">Client login</Link> : ERP_URL ? <a href={`${ERP_URL}/login`} className="btn-secondary hidden sm:inline-flex">Client login</a> : null}
             <Link to="/contact" className="btn-primary hidden sm:inline-flex">Request a quote</Link>
             <button className="rounded-md p-2 md:hidden" onClick={() => setOpen(!open)} aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open}>{open ? <X size={22} /> : <Menu size={22} className={!scrolled && pathname === '/' ? 'text-white' : ''} />}</button>
           </div>
@@ -38,7 +39,7 @@ export default function PublicLayout() {
         {open && (
           <nav aria-label="Mobile" className="glass-bar border-t border-white/10 px-4 pb-4 md:hidden">
             {LINKS.map(([to, label]) => <NavLink key={to} to={to} end={to === '/'} className="block rounded-md px-3 py-3 text-base font-medium text-slate-800 dark:text-slate-100">{label}</NavLink>)}
-            <div className="mt-2 flex items-center gap-2"><Link to="/contact" className="btn-primary flex-1">Request a quote</Link><Link to="/login" className="btn-secondary">Login</Link><ThemeToggle /></div>
+            <div className="mt-2 flex items-center gap-2"><Link to="/contact" className="btn-primary flex-1">Request a quote</Link>{HAS_ERP ? <Link to="/login" className="btn-secondary">Login</Link> : ERP_URL ? <a href={`${ERP_URL}/login`} className="btn-secondary">Login</a> : null}<ThemeToggle /></div>
           </nav>
         )}
       </header>
@@ -64,7 +65,7 @@ export default function PublicLayout() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-white/10"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-5 text-xs text-slate-500 sm:px-6"><span>© {new Date().getFullYear()} {SITE.legalName} All rights reserved.</span><span className="flex gap-4"><Link className="hover:text-white" to="/about">About</Link><Link className="hover:text-white" to="/contact">Contact</Link><Link className="hover:text-white" to="/login">Staff login</Link></span></div></div>
+        <div className="border-t border-white/10"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-5 text-xs text-slate-500 sm:px-6"><span>© {new Date().getFullYear()} {SITE.legalName} All rights reserved.</span><span className="flex gap-4"><Link className="hover:text-white" to="/about">About</Link><Link className="hover:text-white" to="/contact">Contact</Link>{HAS_ERP ? <Link className="hover:text-white" to="/login">Staff login</Link> : ERP_URL ? <a className="hover:text-white" href={`${ERP_URL}/login`}>Staff login</a> : null}</span></div></div>
       </footer>
     </div>
   )

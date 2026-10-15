@@ -51,9 +51,11 @@ const SizeSchema = z.object({
   piecesPerCarton: z.number().int().min(1).max(1000), cuttingAllowancePct: num.min(0).max(30),
 })
 
-export interface AppOptions { db: Db; distDir?: string; quiet?: boolean }
+export interface AppOptions { db: Db; distDir?: string; quiet?: boolean; mode?: 'all' | 'site' | 'erp' }
 
-export async function createApp({ db, distDir = resolve(process.cwd(), config.distDir), quiet = false }: AppOptions) {
+export async function createApp({ db, distDir = resolve(process.cwd(), config.distDir), quiet = false, mode = config.appMode }: AppOptions) {
+  const hasSite = mode !== 'erp'
+  const hasErp = mode !== 'site'
   const app = express()
   app.disable('x-powered-by')
   app.set('trust proxy', config.trustProxy)
@@ -132,9 +134,10 @@ export async function createApp({ db, distDir = resolve(process.cwd(), config.di
 
   api.get('/health', async (_req, res) => {
     await db.query('select 1')
-    res.set('Cache-Control', 'no-store').json({ ok: true, db: db.kind, demo: db.kind === 'memory', version: config.version })
+    res.set('Cache-Control', 'no-store').json({ ok: true, db: db.kind, demo: db.kind === 'memory' && hasErp, version: config.version, mode })
   })
 
+  if (hasErp) {
   // ---------- auth ----------
   api.post('/auth/login', loginLimit, async (req, res) => {
     const p = z.object({ email: z.string().trim().toLowerCase().email(), password: z.string().min(1).max(200) }).safeParse(req.body)
@@ -180,6 +183,9 @@ export async function createApp({ db, distDir = resolve(process.cwd(), config.di
     res.json({ rev: await currentRev(db.query) })
   })
 
+  }
+
+  if (hasSite) {
   // ---------- public website ----------
   api.get('/public/catalog', async (req, res) => {
     const rev = await currentRev(db.query)
@@ -201,6 +207,9 @@ export async function createApp({ db, distDir = resolve(process.cwd(), config.di
     res.status(201).json({ id: Number(r.rows[0].id) })
   })
 
+  }
+
+  if (hasErp) {
   // ---------- inquiries (admin) ----------
   api.get('/inquiries', authed, async (req, res) => {
     const q = z.object({ page: z.coerce.number().int().min(1).default(1), limit: z.coerce.number().int().min(1).max(100).default(15), search: z.string().trim().max(100).default(''), status: z.string().max(20).default('') }).parse(req.query)
@@ -251,12 +260,14 @@ export async function createApp({ db, distDir = resolve(process.cwd(), config.di
     return cached('size', body, 0, () => sizeColorMatrix(body))
   }))
 
+  }
+
   api.use((_req, res) => res.status(404).json({ error: 'Not found' }))
   app.use('/api', api)
 
   // ---------- SEO files ----------
-  app.get('/robots.txt', (_req, res) => res.type('text/plain').set('Cache-Control', 'public, max-age=3600').send(robotsTxt()))
-  app.get('/sitemap.xml', async (_req, res) => res.type('application/xml').set('Cache-Control', 'public, max-age=3600').send(sitemapXml(await getCatalog())))
+  app.get('/robots.txt', (_req, res) => res.type('text/plain').set('Cache-Control', 'public, max-age=3600').send(robotsTxt(mode)))
+  if (hasSite) app.get('/sitemap.xml', async (_req, res) => res.type('application/xml').set('Cache-Control', 'public, max-age=3600').send(sitemapXml(await getCatalog())))
 
   // ---------- static frontend ----------
   // Vercel serves dist/ statically, so the HTML shell is stored under another name to force '/' through this server
@@ -274,8 +285,8 @@ export async function createApp({ db, distDir = resolve(process.cwd(), config.di
     }))
     app.use(async (req, res, next) => {
       if ((req.method !== 'GET' && req.method !== 'HEAD') || /\.[a-z0-9]{2,5}$/i.test(req.path)) return next()
-      const r = renderRoute(req.path, await getCatalog())
-      res.status(r.status).type('html').set('Cache-Control', isErpPath(req.path) || !r.meta.index ? 'no-cache' : 'public, max-age=60, stale-while-revalidate=300').send(applyTemplate(template, r))
+      const r = renderRoute(req.path, hasSite ? await getCatalog() : { products: [], countries: [] }, mode)
+      res.status(r.status).type('html').set('Cache-Control', (hasErp && isErpPath(req.path)) || !r.meta.index ? 'no-cache' : 'public, max-age=60, stale-while-revalidate=300').send(applyTemplate(template, r))
     })
   } else {
     app.use((_req, res) => res.status(404).type('text').send('Frontend is not built yet. Run "npm run build" or use "npm run dev" and open the Vite URL.'))

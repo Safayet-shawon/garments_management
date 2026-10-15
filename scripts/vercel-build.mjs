@@ -8,6 +8,10 @@ import { build } from 'esbuild'
 
 const run = (cmd, args) => { const r = spawnSync(cmd, args, { stdio: 'inherit', shell: process.platform === 'win32' }); if (r.status !== 0) process.exit(r.status ?? 1) }
 rmSync('.vercel/output', { recursive: true, force: true })
+// APP_MODE=site|erp builds only that half (ERP_URL / WEBSITE_URL link the two deployments together)
+process.env.VITE_APP_MODE = process.env.APP_MODE ?? 'all'
+if (process.env.ERP_URL) process.env.VITE_ERP_URL = process.env.ERP_URL
+if (process.env.WEBSITE_URL) process.env.VITE_SITE_URL = process.env.WEBSITE_URL
 run('npx', ['vite', 'build'])
 
 const out = '.vercel/output'

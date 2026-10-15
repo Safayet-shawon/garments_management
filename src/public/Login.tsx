@@ -5,6 +5,7 @@ import { PAGES } from '../../shared/site'
 import { useAuth } from '../auth'
 import { Logo, Spinner } from '../Logo'
 import { useSeo } from '../seo'
+import { HAS_SITE, SITE_URL } from '../mode'
 
 export default function Login() {
   const page = PAGES['/login']
@@ -36,7 +37,7 @@ export default function Login() {
       <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-gold-500/20 blur-3xl" aria-hidden="true" />
       <div className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-brand-500/30 blur-3xl" aria-hidden="true" />
       <main className="glass-card relative w-full max-w-md rounded-3xl p-8 text-white">
-        <Link to="/" aria-label="Back to the Winner Apparels website" className="inline-block"><Logo light size={42} /></Link>
+        {HAS_SITE ? <Link to="/" aria-label="Back to the Winner Apparels website" className="inline-block"><Logo light size={42} /></Link> : <Logo light size={42} />}
         <h1 className="mt-8 font-display text-3xl font-bold">{page.h1}</h1>
         <p className="mt-2 text-sm text-slate-300">Business management for the Winner Apparels team.</p>
         <form onSubmit={submit} className="mt-8 space-y-5">
@@ -48,7 +49,7 @@ export default function Login() {
           <button type="submit" disabled={busy || auth.status === 'checking'} className="btn-primary btn-lg w-full">{busy ? <><Spinner size={18} />Signing in...</> : <><Lock size={16} />Sign in</>}</button>
         </form>
         {auth.health?.demo && <p className="mt-6 rounded-lg bg-white/10 p-3 text-xs text-slate-300">Demo database: the sign-in details are filled in for you.</p>}
-        <p className="mt-6 text-center text-sm"><Link to="/" className="text-slate-300 hover:text-white">Back to website</Link></p>
+        {HAS_SITE ? <p className="mt-6 text-center text-sm"><Link to="/" className="text-slate-300 hover:text-white">Back to website</Link></p> : SITE_URL ? <p className="mt-6 text-center text-sm"><a href={SITE_URL} className="text-slate-300 hover:text-white">Back to website</a></p> : null}
       </main>
     </div>
   )

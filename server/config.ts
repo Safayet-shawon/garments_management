@@ -17,6 +17,8 @@ export const config = {
   distDir: env.DIST_DIR ?? 'dist',
   trustProxy: env.TRUST_PROXY ? Number(env.TRUST_PROXY) : isProd ? 1 : 0,
   version: env.npm_package_version ?? '1.0.0',
+  /** 'all' (default), 'site' (public website + catalogue API only) or 'erp' (business app + its API only) */
+  appMode: (['site', 'erp'].includes(env.APP_MODE ?? '') ? env.APP_MODE : 'all') as 'all' | 'site' | 'erp',
 }
 
 export function assertProductionConfig() {

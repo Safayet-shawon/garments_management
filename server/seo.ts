@@ -28,9 +28,16 @@ function nav(catalog: PublicCatalog) {
   return `<nav aria-label="Main">${links}</nav><h2>Collections</h2><ul>${prods}</ul>`
 }
 
-export function renderRoute(pathname: string, catalog: PublicCatalog): RenderedMeta {
+export type AppMode = 'all' | 'site' | 'erp'
+
+export function renderRoute(pathname: string, catalog: PublicCatalog, mode: AppMode = 'all'): RenderedMeta {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
   const base = { image: abs('/og-image.jpg'), type: 'website' as const }
+  const notFound = (): RenderedMeta => ({ status: 404, meta: { path, title: 'Page not found | Winner Apparels', description: 'This page could not be found.', h1: 'Page not found', keywords: [], index: false, canonical: abs('/'), ...base }, jsonLd: [], body: `<h1>Page not found</h1><p>Go back to the <a href="/">Winner Apparels home page</a>.</p>` })
+  // business app deployment: every page is the private application shell
+  if (mode === 'erp') return { status: 200, meta: { path, title: 'Winner Apparels Business Management', description: 'Winner Apparels business management system.', h1: 'Winner Apparels Business Management', keywords: [], index: false, canonical: abs('/'), ...base }, jsonLd: [], body: '' }
+  // website deployment: the application and its sign-in page do not exist here
+  if (mode === 'site' && (isErpPath(path) || path === '/login')) return notFound()
   const known = PAGES[path]
 
   if (known) {
@@ -106,13 +113,13 @@ export function applyTemplate(template: string, r: RenderedMeta): string {
     .replace('<!--SEO_BODY-->', r.body ? `<div id="seo-fallback">${r.body}</div>` : '')
 }
 
-export function robotsTxt(): string {
+export function robotsTxt(mode: AppMode = 'all'): string {
+  if (mode === 'erp') return 'User-agent: *\nDisallow: /\n'
   return [
     'User-agent: *',
     'Allow: /',
     'Disallow: /api/',
-    'Disallow: /login',
-    ...ERP_PREFIXES.map((p) => `Disallow: ${p}`),
+    ...(mode === 'site' ? [] : ['Disallow: /login', ...ERP_PREFIXES.map((p) => `Disallow: ${p}`)]),
     '',
     `Sitemap: ${abs('/sitemap.xml')}`,
     '',
