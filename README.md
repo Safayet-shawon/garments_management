@@ -6,7 +6,13 @@ Public website and business management system for an export garment manufacturer
 - **Business app** (`/dashboard` and the rest, after sign-in): products and variants, inventory, manufacturing (cutting, sewing, finishing, QC), procurement, HR and payroll, merchandising (buyers, countries, buyer orders, shipments), reports and the **Planning Lab** (matrix mathematics).
 - **API**: Express, Postgres (Supabase), cached and compressed.
 
-Live demo: https://winner-apparels.vercel.app (demo database, sign-in is pre-filled).
+Live demos (demo database, sign-in is pre-filled):
+
+| | URL | What it is |
+|---|---|---|
+| Website | https://winner-apparels-site.vercel.app | public landing website only |
+| Business app | https://winner-apparels-erp.vercel.app | ERP panel only (sign-in, noindex) |
+| Combined | https://winner-apparels.vercel.app | both in one project |
 
 ## Quick start
 
@@ -37,6 +43,17 @@ npx vercel env add AUTH_SECRET production      # also ADMIN_EMAIL, ADMIN_PASSWOR
 node scripts/vercel-build.mjs                  # writes .vercel/output (static CDN files + one serverless function)
 npx vercel deploy --prebuilt --prod
 ```
+
+Split deployments use the same code with `APP_MODE`:
+
+```bash
+# business app
+APP_MODE=erp WEBSITE_URL=https://your-site.example node scripts/vercel-build.mjs   # env on the project: APP_MODE=erp
+# website
+APP_MODE=site ERP_URL=https://your-erp.example node scripts/vercel-build.mjs       # env on the project: APP_MODE=site
+```
+
+The build leaves the other half out of the bundle, and the API only exposes that half's endpoints. Point both at the same `DATABASE_URL` so quote requests from the website show up in the business app.
 
 `vercel.json` also lets Vercel build it from Git. Without `DATABASE_URL` the function uses the in-memory demo database, which resets whenever a serverless instance restarts. Add the Supabase URL for permanent data.
 
